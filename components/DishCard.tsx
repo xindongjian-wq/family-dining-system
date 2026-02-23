@@ -7,6 +7,7 @@ import { Star, Utensils } from 'lucide-react';
 interface Props {
   dish: {
     id: number;
+    number?: number;
     title: string;
     metadata?: {
       image?: string;
@@ -24,8 +25,11 @@ export function DishCard({ dish }: Props) {
     ? (metadata.rating_sum / metadata.rating_count).toFixed(1)
     : null;
 
+  // 使用 number 而不是 id（GitHub issue id 是全局大数字，number 才是仓库编号）
+  const issueNumber = dish.number || dish.id;
+
   return (
-    <Link href={`/dish/${dish.id}`}>
+    <Link href={`/dish/${issueNumber}`}>
       <div className="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md transition cursor-pointer group">
         <div className="relative aspect-square bg-gray-100">
           {metadata.image ? (
