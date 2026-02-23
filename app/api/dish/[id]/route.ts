@@ -11,7 +11,15 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    const { issue, comments } = await githubApi.getDish(parseInt(id));
+    const issueNumber = parseInt(id);
+
+    if (isNaN(issueNumber)) {
+      return NextResponse.json({ error: 'Invalid dish ID' }, { status: 400 });
+    }
+
+    console.log('Fetching dish:', issueNumber);
+
+    const { issue, comments } = await githubApi.getDish(issueNumber);
 
     // 解析订单记录
     const orders = comments
