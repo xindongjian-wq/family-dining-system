@@ -4,16 +4,18 @@ import { useEffect, useState, useCallback } from 'react';
 import { DishCard } from '@/components/DishCard';
 import { CategoryFilter } from '@/components/CategoryFilter';
 import { SearchBar } from '@/components/SearchBar';
-import { Utensils, Plus, BookOpen } from 'lucide-react';
+import { Utensils, Plus, BookOpen, AlertCircle } from 'lucide-react';
 
 export default function HomePage() {
   const [dishes, setDishes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
 
   const fetchDishes = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
       const params = new URLSearchParams();
       if (selectedCategory !== 'all') params.append('category', selectedCategory);
@@ -21,9 +23,25 @@ export default function HomePage() {
 
       const res = await fetch(`/api/dishes?${params}`);
       const data = await res.json();
-      setDishes(data);
-    } catch (error) {
-      console.error('Failed to fetch dishes:', error);
+
+      if (!res.ok) {
+        setError(data.error || '获取菜品失败');
+        setDishes([]);
+        return;
+      }
+
+      // 确保 data 是数组
+      if (Array.isArray(data)) {
+        setDishes(data);
+      } else {
+        console.error('API 返回的不是数组:', data);
+        setDishes([]);
+        setError('数据格式错误');
+      }
+    } catch (err) {
+      console.error('Failed to fetch dishes:', err);
+      setError('网络错误，请检查配置');
+      setDishes([]);
     } finally {
       setLoading(false);
     }
@@ -56,16 +74,35 @@ export default function HomePage() {
         </div>
       </div>
 
+      {/* Error State */}
+      {error && (
+        <div className="max-w-4xl mx-auto px-4 py-6">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
+            <AlertCircle className="text-red-500 flex-shrink-0 mt-0.5" size={20} />
+            <div>
+              <p className="text-red-700 font-medium">加载失败</p>
+              <p className="text-red-600 text-sm">{error}</p>
+              <button
+                onClick={fetchDishes}
+                className="mt-2 text-sm text-red-700 underline"
+              >
+                重试
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Dish Grid */}
       <main className="max-w-4xl mx-auto px-4 py-6">
         {loading ? (
           <div className="text-center py-12 text-gray-500">加载中...</div>
-        ) : dishes.length === 0 ? (
+        ) : !error && dishes.length === 0 ? (
           <div className="text-center py-12 text-gray-500">
             <Utensils size={48} className="mx-auto mb-4 text-gray-300" />
             <p>暂无菜品</p>
           </div>
-        ) : (
+        ) : !error && (
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             {dishes.map((dish) => (
               <DishCard key={dish.id} dish={dish} />
