@@ -98,6 +98,17 @@ export function formatTime(dateString: string): string {
   return date.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' });
 }
 
+// 格式化完整时间（用于吃饭日记）
+export function formatFullTime(dateString: string): string {
+  const date = new Date(dateString);
+  const month = date.getMonth() + 1;
+  const day = date.getDate();
+  const hours = date.getHours().toString().padStart(2, '0');
+  const minutes = date.getMinutes().toString().padStart(2, '0');
+
+  return `${month}月${day}日 ${hours}:${minutes}`;
+}
+
 // 按日期分组
 export function groupByDate(items: any[], dateKey: string = 'created_at') {
   const groups: Record<string, any[]> = {};

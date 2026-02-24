@@ -150,6 +150,7 @@ export default function DishDetailPage() {
             alt={dish.title}
             fill
             className="object-cover"
+            unoptimized
           />
         </div>
       )}

@@ -23,8 +23,13 @@ export async function POST(request: Request) {
     // 上传到 GitHub
     const result = await githubApi.uploadImage(filename, base64Data);
 
-    // 返回图片的 raw URL
-    const imageUrl = result.content.download_url || result.content.raw_url || `https://raw.githubusercontent.com/${process.env.GITHUB_REPO}/main/${filename}`;
+    // GitHub API 返回的 URL 优先级：download_url > git_url > 自己构建
+    const GITHUB_REPO = process.env.GITHUB_REPO || '';
+    const [owner, repo] = GITHUB_REPO.split('/');
+    const branch = result.content.sha ? 'main' : 'main'; // 使用 main 分支
+
+    // 使用 GitHub raw 内容 URL（最稳定）
+    const imageUrl = `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${filename}`;
 
     return NextResponse.json({ url: imageUrl });
   } catch (error: any) {

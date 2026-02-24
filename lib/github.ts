@@ -146,4 +146,21 @@ export const githubApi = {
 
     return allComments.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
   },
+
+  // 删除菜品（关闭 issue）
+  async deleteDish(issueNumber: number) {
+    if (!owner || !repo) throw new Error('GITHUB_REPO not configured');
+
+    const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/issues/${issueNumber}`, {
+      method: 'PATCH',
+      headers: { ...headers, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ state: 'closed' }),
+    });
+
+    if (!res.ok) {
+      throw new Error(`GitHub API error: ${res.status}`);
+    }
+
+    return await res.json();
+  },
 };

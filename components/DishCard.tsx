@@ -38,6 +38,7 @@ export function DishCard({ dish }: Props) {
               alt={dish.title}
               fill
               className="object-cover group-hover:scale-105 transition duration-300"
+              unoptimized
             />
           ) : (
             <div className="absolute inset-0 flex items-center justify-center text-gray-400">

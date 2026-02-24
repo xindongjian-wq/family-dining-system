@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { ArrowLeft, Camera, X, Save, Upload } from 'lucide-react';
+import { ArrowLeft, Camera, X, Save, Trash2 } from 'lucide-react';
 import { CATEGORIES } from '@/lib/types';
 
 export default function EditDishPage() {
@@ -17,6 +17,7 @@ export default function EditDishPage() {
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
+  const [deleting, setDeleting] = useState(false);
 
   // 加载菜品数据
   useEffect(() => {
@@ -152,6 +153,34 @@ export default function EditDishPage() {
       setError('保存失败，请重试');
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function handleDelete() {
+    if (!confirm('确定要删除这道菜吗？删除后无法恢复。')) {
+      return;
+    }
+
+    setDeleting(true);
+    setError('');
+
+    try {
+      const res = await fetch(`/api/dish/${params.id}`, {
+        method: 'DELETE',
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        setError(data.error || '删除失败');
+        return;
+      }
+
+      alert('删除成功！');
+      router.push('/');
+    } catch (err) {
+      setError('删除失败，请重试');
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -293,6 +322,17 @@ export default function EditDishPage() {
         >
           <Save size={20} />
           {saving ? '保存中...' : '保存修改'}
+        </button>
+
+        {/* Delete */}
+        <button
+          type="button"
+          onClick={handleDelete}
+          disabled={deleting || saving || uploading}
+          className="w-full py-3 bg-white border border-red-200 text-red-500 font-semibold rounded-xl hover:bg-red-50 disabled:bg-gray-100 disabled:text-gray-400 disabled:border-gray-200 disabled:cursor-not-allowed transition flex items-center justify-center gap-2"
+        >
+          <Trash2 size={18} />
+          {deleting ? '删除中...' : '删除这道菜'}
         </button>
       </form>
     </div>

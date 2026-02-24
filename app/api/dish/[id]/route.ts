@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { githubApi } from '@/lib/github';
-import { parseDishMetadata, parseOrderComment, buildDishMetadata } from '@/lib/utils';
+import { parseDishMetadata, parseOrderComment } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
 
@@ -124,5 +124,27 @@ ${newMetadata.description}`;
   } catch (error: any) {
     console.error('Failed to update dish:', error);
     return NextResponse.json({ error: error.message || 'Failed to update dish' }, { status: 500 });
+  }
+}
+
+// DELETE - 删除菜品（关闭 issue）
+export async function DELETE(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+    const issueNumber = parseInt(id);
+
+    if (isNaN(issueNumber)) {
+      return NextResponse.json({ error: 'Invalid dish ID' }, { status: 400 });
+    }
+
+    await githubApi.deleteDish(issueNumber);
+
+    return NextResponse.json({ success: true });
+  } catch (error: any) {
+    console.error('Failed to delete dish:', error);
+    return NextResponse.json({ error: error.message || 'Failed to delete dish' }, { status: 500 });
   }
 }

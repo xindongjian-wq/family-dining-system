@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { formatTime, groupByDate } from '@/lib/utils';
+import { formatTime, formatFullTime, groupByDate } from '@/lib/utils';
 import { BookOpen, Clock, User as UserIcon, Utensils } from 'lucide-react';
 
 export default function DiaryPage() {
@@ -91,7 +91,7 @@ export default function DiaryPage() {
                           )}
                           <div className="text-xs text-gray-400 mt-2 flex items-center gap-1">
                             <Clock size={12} />
-                            {formatTime(order.timestamp)}
+                            {formatFullTime(order.timestamp)}
                           </div>
                         </div>
                       </div>
