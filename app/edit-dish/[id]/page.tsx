@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { ArrowLeft, Camera, X, Save } from 'lucide-react';
+import { ArrowLeft, Camera, X, Save, Upload } from 'lucide-react';
 import { CATEGORIES } from '@/lib/types';
 
 export default function EditDishPage() {
@@ -15,6 +15,7 @@ export default function EditDishPage() {
   const [imageUrl, setImageUrl] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
 
   // 加载菜品数据
@@ -56,6 +57,66 @@ export default function EditDishPage() {
     }
   }
 
+  async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // 检查文件大小（GitHub API 限制 1MB）
+    if (file.size > 1024 * 1024) {
+      setError('图片太大，请选择 1MB 以内的图片');
+      return;
+    }
+
+    setUploading(true);
+    setError('');
+
+    try {
+      // 压缩图片
+      const compressedBase64 = await compressImage(file, 800);
+
+      // 上传到 GitHub
+      const res = await fetch('/api/upload-image', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image: compressedBase64 }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || '上传失败');
+      }
+
+      const data = await res.json();
+      setImageUrl(data.url);
+    } catch (err: any) {
+      setError(err.message || '图片上传失败');
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  async function compressImage(file: File, maxWidth: number): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const img = new (window as any).Image();
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+
+      img.onload = () => {
+        // 计算缩放比例
+        const scale = Math.min(1, maxWidth / img.width);
+        canvas.width = img.width * scale;
+        canvas.height = img.height * scale;
+
+        // 绘制并压缩
+        ctx?.drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL('image/jpeg', 0.85));
+      };
+
+      img.onerror = reject;
+      img.src = URL.createObjectURL(file);
+    });
+  }
+
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
 
@@ -65,6 +126,8 @@ export default function EditDishPage() {
     }
 
     setSaving(true);
+    setError('');
+
     try {
       const res = await fetch(`/api/dish/${params.id}`, {
         method: 'PATCH',
@@ -90,18 +153,6 @@ export default function EditDishPage() {
     } finally {
       setSaving(false);
     }
-  }
-
-  function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    // 简单的图片预览
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setImageUrl(reader.result as string);
-    };
-    reader.readAsDataURL(file);
   }
 
   if (loading) {
@@ -135,14 +186,16 @@ export default function EditDishPage() {
           <label className="block text-sm font-medium text-gray-700 mb-2">
             菜品图片
           </label>
-          <div className="relative aspect-video bg-gray-100 rounded-xl overflow-hidden">
+          <div className="relative bg-gray-100 rounded-xl overflow-hidden" style={{ minHeight: '200px' }}>
             {imageUrl ? (
-              <>
+              <div className="relative w-full">
                 <Image
                   src={imageUrl}
                   alt="Preview"
-                  fill
-                  className="object-cover"
+                  width={800}
+                  height={0}
+                  className="w-full h-auto"
+                  unoptimized
                 />
                 <button
                   type="button"
@@ -151,18 +204,25 @@ export default function EditDishPage() {
                 >
                   <X size={20} />
                 </button>
-              </>
+              </div>
             ) : (
-              <label className="absolute inset-0 flex flex-col items-center justify-center cursor-pointer hover:bg-gray-200 transition">
+              <label className="flex flex-col items-center justify-center py-16 cursor-pointer hover:bg-gray-200 transition">
                 <Camera size={48} className="text-gray-400 mb-2" />
                 <span className="text-gray-500">点击上传图片</span>
+                <span className="text-xs text-gray-400 mt-1">支持 JPG、PNG，最大 1MB</span>
                 <input
                   type="file"
                   accept="image/*"
                   onChange={handleImageUpload}
+                  disabled={uploading}
                   className="hidden"
                 />
               </label>
+            )}
+            {uploading && (
+              <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                <div className="text-white">上传中...</div>
+              </div>
             )}
           </div>
         </div>
@@ -228,7 +288,7 @@ export default function EditDishPage() {
         {/* Submit */}
         <button
           type="submit"
-          disabled={saving}
+          disabled={saving || uploading}
           className="w-full py-4 bg-orange-500 text-white font-semibold rounded-xl hover:bg-orange-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition flex items-center justify-center gap-2 text-lg"
         >
           <Save size={20} />

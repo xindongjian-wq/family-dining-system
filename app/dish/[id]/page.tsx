@@ -53,13 +53,16 @@ export default function DishDetailPage() {
       return;
     }
 
+    // 使用 issue number 而不是 params.id
+    const issueNumber = dish?.number || dish?.id;
+
     setSubmitting(true);
     try {
       const res = await fetch('/api/order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          dish_id: params.id,
+          dish_id: issueNumber,
           user: userName,
           rating: userRating,
           comment: userComment,

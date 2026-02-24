@@ -62,8 +62,8 @@ export async function PATCH(
     // 更新元数据
     const newMetadata = {
       ...metadata,
-      image: image || metadata.image || '',
-      description: description || metadata.description || '',
+      image: image !== undefined ? image : metadata.image,
+      description: description !== undefined ? description : metadata.description,
     };
 
     // 构建新的 body
@@ -78,13 +78,46 @@ created_at: ${metadata.created_at || new Date().toISOString().split('T')[0]}
 
 ${newMetadata.description}`;
 
-    // 更新 issue
-    await githubApi.updateDish(issueNumber, newBody);
+    // 准备更新数据
+    const updateData: any = { body: newBody };
 
-    // 如果标题或分类改变了，需要更新 labels
+    // 更新标题
     if (title && title !== issue.title) {
-      // GitHub API 不支持直接修改标题，需要用另一种方式
-      // 暂时只返回成功，标题更新需要另外处理
+      updateData.title = title;
+    }
+
+    // 处理分类标签
+    const oldCategoryLabel = issue.labels?.find((l: any) =>
+      l.name && l.name.startsWith('category:')
+    );
+    const oldCategory = oldCategoryLabel?.name.replace('category:', '');
+
+    if (category && category !== oldCategory) {
+      // 移除旧的 category 标签，添加新的
+      const otherLabels = issue.labels
+        .filter((l: any) => !l.name.startsWith('category:'))
+        .map((l: any) => l.name);
+      updateData.labels = [...otherLabels, `category:${category}`];
+    }
+
+    // 调用 GitHub API 更新
+    const GITHUB_TOKEN = process.env.GITHUB_TOKEN || '';
+    const GITHUB_REPO = process.env.GITHUB_REPO || '';
+    const [owner, repo] = GITHUB_REPO.split('/');
+
+    const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/issues/${issueNumber}`, {
+      method: 'PATCH',
+      headers: {
+        'Authorization': `Bearer ${GITHUB_TOKEN}`,
+        'Accept': 'application/vnd.github.v3+json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(updateData),
+    });
+
+    if (!res.ok) {
+      const errorData = await res.json();
+      throw new Error(`GitHub API error: ${res.status} - ${JSON.stringify(errorData)}`);
     }
 
     return NextResponse.json({ success: true });
