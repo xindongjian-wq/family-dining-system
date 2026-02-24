@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
 import { CATEGORIES } from '@/lib/types';
 import { ArrowLeft, Camera, X } from 'lucide-react';
 
@@ -13,6 +12,7 @@ export default function AddDishPage() {
   const [category, setCategory] = useState<string>(CATEGORIES[0]);
   const [imageUrl, setImageUrl] = useState('');
   const [uploading, setUploading] = useState(false);
+  const [imageError, setImageError] = useState(false);
   const [error, setError] = useState('');
 
   async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -135,19 +135,20 @@ export default function AddDishPage() {
             菜品图片
           </label>
           <div className="relative bg-gray-100 rounded-xl overflow-hidden" style={{ minHeight: '200px' }}>
-            {imageUrl ? (
+            {imageUrl && !imageError ? (
               <div className="relative w-full">
-                <Image
+                <img
                   src={imageUrl}
                   alt="Preview"
-                  width={800}
-                  height={0}
                   className="w-full h-auto"
-                  unoptimized
+                  onError={() => setImageError(true)}
                 />
                 <button
                   type="button"
-                  onClick={() => setImageUrl('')}
+                  onClick={() => {
+                    setImageUrl('');
+                    setImageError(false);
+                  }}
                   className="absolute top-2 right-2 p-2 bg-black/50 rounded-full text-white hover:bg-black/70"
                 >
                   <X size={20} />

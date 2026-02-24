@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import Image from 'next/image';
 import { Rating } from '@/components/Rating';
 import { useUser } from '@/contexts/UserContext';
 import { ArrowLeft, Clock, Edit, Utensils } from 'lucide-react';
@@ -19,6 +18,7 @@ export default function DishDetailPage() {
   const [userRating, setUserRating] = useState(0);
   const [userComment, setUserComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [imageError, setImageError] = useState(false);
 
   const fetchDish = useCallback(async () => {
     setLoading(true);
@@ -143,14 +143,13 @@ export default function DishDetailPage() {
       </header>
 
       {/* Image */}
-      {metadata.image && (
+      {metadata.image && !imageError && (
         <div className="relative w-full aspect-video bg-gray-100">
-          <Image
+          <img
             src={metadata.image}
             alt={dish.title}
-            fill
-            className="object-cover"
-            unoptimized
+            className="w-full h-full object-cover"
+            onError={() => setImageError(true)}
           />
         </div>
       )}

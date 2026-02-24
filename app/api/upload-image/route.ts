@@ -23,13 +23,20 @@ export async function POST(request: Request) {
     // 上传到 GitHub
     const result = await githubApi.uploadImage(filename, base64Data);
 
-    // GitHub API 返回的 URL 优先级：download_url > git_url > 自己构建
-    const GITHUB_REPO = process.env.GITHUB_REPO || '';
-    const [owner, repo] = GITHUB_REPO.split('/');
-    const branch = result.content.sha ? 'main' : 'main'; // 使用 main 分支
+    console.log('GitHub upload result:', JSON.stringify(result, null, 2));
 
-    // 使用 GitHub raw 内容 URL（最稳定）
-    const imageUrl = `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${filename}`;
+    // GitHub API 返回多种 URL，优先使用 download_url
+    // 如果 download_url 不存在，则构建 raw.githubusercontent.com URL
+    let imageUrl = result.content?.download_url;
+
+    if (!imageUrl) {
+      const GITHUB_REPO = process.env.GITHUB_REPO || '';
+      const [owner, repo] = GITHUB_REPO.split('/');
+      // 获取默认分支（通常是 main 或 master）
+      imageUrl = `https://raw.githubusercontent.com/${owner}/${repo}/main/${filename}`;
+    }
+
+    console.log('Final image URL:', imageUrl);
 
     return NextResponse.json({ url: imageUrl });
   } catch (error: any) {

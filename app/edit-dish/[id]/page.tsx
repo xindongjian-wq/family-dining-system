@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import Image from 'next/image';
 import { ArrowLeft, Camera, X, Save, Trash2 } from 'lucide-react';
 import { CATEGORIES } from '@/lib/types';
 
@@ -18,6 +17,7 @@ export default function EditDishPage() {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
   const [deleting, setDeleting] = useState(false);
+  const [imageError, setImageError] = useState(false);
 
   // 加载菜品数据
   useEffect(() => {
@@ -216,19 +216,20 @@ export default function EditDishPage() {
             菜品图片
           </label>
           <div className="relative bg-gray-100 rounded-xl overflow-hidden" style={{ minHeight: '200px' }}>
-            {imageUrl ? (
+            {imageUrl && !imageError ? (
               <div className="relative w-full">
-                <Image
+                <img
                   src={imageUrl}
                   alt="Preview"
-                  width={800}
-                  height={0}
                   className="w-full h-auto"
-                  unoptimized
+                  onError={() => setImageError(true)}
                 />
                 <button
                   type="button"
-                  onClick={() => setImageUrl('')}
+                  onClick={() => {
+                    setImageUrl('');
+                    setImageError(false);
+                  }}
                   className="absolute top-2 right-2 p-2 bg-black/50 rounded-full text-white hover:bg-black/70"
                 >
                   <X size={20} />

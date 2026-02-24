@@ -1,8 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import Image from 'next/image';
 import { Star, Utensils } from 'lucide-react';
+import { useState } from 'react';
 
 interface Props {
   dish: {
@@ -28,17 +28,23 @@ export function DishCard({ dish }: Props) {
   // 使用 number 而不是 id（GitHub issue id 是全局大数字，number 才是仓库编号）
   const issueNumber = dish.number || dish.id;
 
+  const [imageError, setImageError] = useState(false);
+
+  const handleImageError = () => {
+    setImageError(true);
+  };
+
   return (
     <Link href={`/dish/${issueNumber}`}>
       <div className="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md transition cursor-pointer group">
         <div className="relative aspect-square bg-gray-100">
-          {metadata.image ? (
-            <Image
+          {metadata.image && !imageError ? (
+            <img
               src={metadata.image}
               alt={dish.title}
-              fill
-              className="object-cover group-hover:scale-105 transition duration-300"
-              unoptimized
+              className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+              onError={handleImageError}
+              loading="lazy"
             />
           ) : (
             <div className="absolute inset-0 flex items-center justify-center text-gray-400">
