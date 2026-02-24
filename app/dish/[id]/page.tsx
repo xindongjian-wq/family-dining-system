@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Rating } from '@/components/Rating';
-import { ArrowLeft, Clock, User as UserIcon, Utensils } from 'lucide-react';
+import { ArrowLeft, Clock, Edit, Utensils } from 'lucide-react';
 import { formatTime } from '@/lib/utils';
 
 export default function DishDetailPage() {
@@ -34,8 +34,8 @@ export default function DishDetailPage() {
 
       setDish(data.issue);
       setOrders(data.orders || []);
-    } catch (error) {
-      console.error('Failed to fetch dish:', error);
+    } catch (err) {
+      console.error('Failed to fetch dish:', err);
       setError('网络错误，请重试');
       setDish(null);
     } finally {
@@ -77,7 +77,7 @@ export default function DishDetailPage() {
       setUserRating(0);
       setUserComment('');
       fetchDish();
-    } catch (error) {
+    } catch (err) {
       alert('点菜失败，请重试');
     } finally {
       setSubmitting(false);
@@ -111,6 +111,9 @@ export default function DishDetailPage() {
     ? (metadata.rating_sum / metadata.rating_count).toFixed(1)
     : '-';
 
+  // 使用 number 而不是 id
+  const issueNumber = dish.number || dish.id;
+
   return (
     <div className="min-h-screen bg-gray-50 pb-32">
       {/* Header */}
@@ -122,9 +125,16 @@ export default function DishDetailPage() {
           >
             <ArrowLeft size={24} />
           </button>
-          <h1 className="text-lg font-semibold flex-1 text-center pr-8">
+          <h1 className="text-lg font-semibold flex-1 text-center pr-16">
             菜品详情
           </h1>
+          <button
+            onClick={() => router.push(`/edit-dish/${issueNumber}`)}
+            className="p-2 -mr-2 hover:bg-gray-100 rounded-full text-orange-500"
+            title="编辑菜品"
+          >
+            <Edit size={24} />
+          </button>
         </div>
       </header>
 
