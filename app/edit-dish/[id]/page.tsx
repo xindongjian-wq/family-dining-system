@@ -61,9 +61,9 @@ export default function EditDishPage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // 检查文件大小（GitHub API 限制 1MB）
-    if (file.size > 1024 * 1024) {
-      setError('图片太大，请选择 1MB 以内的图片');
+    // 检查文件大小（GitHub API 限制 25MB，这里限制 3MB）
+    if (file.size > 3 * 1024 * 1024) {
+      setError('图片太大，请选择 3MB 以内的图片');
       return;
     }
 
@@ -209,7 +209,7 @@ export default function EditDishPage() {
               <label className="flex flex-col items-center justify-center py-16 cursor-pointer hover:bg-gray-200 transition">
                 <Camera size={48} className="text-gray-400 mb-2" />
                 <span className="text-gray-500">点击上传图片</span>
-                <span className="text-xs text-gray-400 mt-1">支持 JPG、PNG，最大 1MB</span>
+                <span className="text-xs text-gray-400 mt-1">支持 JPG、PNG，最大 3MB</span>
                 <input
                   type="file"
                   accept="image/*"

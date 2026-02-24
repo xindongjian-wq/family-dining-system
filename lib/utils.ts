@@ -76,17 +76,8 @@ export function buildOrderComment(data: {
   rating?: number;
   comment?: string;
 }): string {
-  return `\\\`\\\`\\\`json
-{
-  "type": "order",
-  "dish_id": ${data.dish_id},
-  "dish_name": "${data.dish_name}",
-  "user": "${data.user}",
-  "timestamp": "${new Date().toISOString()}",
-  "rating": ${data.rating || 0},
-  "comment": "${data.comment || ''}"
-}
-\\\`\\\`\\\``;
+  const commentEscaped = (data.comment || '').replace(/"/g, '\\"').replace(/\n/g, '\\n');
+  return `{"type":"order","dish_id":${data.dish_id},"dish_name":"${data.dish_name}","user":"${data.user}","timestamp":"${new Date().toISOString()}","rating":${data.rating || 0},"comment":"${commentEscaped}"}`;
 }
 
 // 格式化时间
