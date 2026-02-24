@@ -23,8 +23,8 @@ export async function GET(
 
     // 解析订单记录
     const orders = comments
-      .map(c => (c.body ? parseOrderComment(c.body) : null))
-      .filter(c => c && c.type === 'order');
+      .map((c: any) => (c.body ? parseOrderComment(c.body) : null))
+      .filter((c: any) => c && c.type === 'order');
 
     return NextResponse.json({
       issue: {

@@ -16,21 +16,21 @@ export async function GET(request: Request) {
 
     // 过滤分类
     if (category && category !== 'all') {
-      issues = issues.filter(issue =>
-        issue.labels.some(l => typeof l === 'object' && l && 'name' in l && l.name === `category:${category}`)
+      issues = issues.filter((issue: any) =>
+        issue.labels.some((l: any) => typeof l === 'object' && l && 'name' in l && l.name === `category:${category}`)
       );
     }
 
     // 搜索
     if (search) {
       const query = search.toLowerCase();
-      issues = issues.filter(issue =>
+      issues = issues.filter((issue: any) =>
         issue.title.toLowerCase().includes(query) ||
         (issue.body && issue.body.toLowerCase().includes(query))
       );
     }
 
-    const dishes = issues.map(issue => ({
+    const dishes = issues.map((issue: any) => ({
       ...issue,
       metadata: parseDishMetadata(issue.body || ''),
     }));
