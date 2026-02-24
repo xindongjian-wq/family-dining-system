@@ -1,25 +1,26 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Rating } from '@/components/Rating';
+import { useUser } from '@/contexts/UserContext';
 import { ArrowLeft, Clock, Edit, Utensils } from 'lucide-react';
 import { formatTime } from '@/lib/utils';
 
 export default function DishDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const { userName, isLoggedIn } = useUser();
   const [dish, setDish] = useState<any>(null);
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [userName, setUserName] = useState('');
   const [userRating, setUserRating] = useState(0);
   const [userComment, setUserComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  async function fetchDish() {
+  const fetchDish = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -41,15 +42,16 @@ export default function DishDetailPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [params.id]);
 
   useEffect(() => {
     fetchDish();
-  }, [params.id]);
+  }, [fetchDish]);
 
   async function handleOrder() {
-    if (!userName.trim()) {
-      alert('请输入您的名字');
+    if (!userName) {
+      alert('请先登录');
+      router.push('/');
       return;
     }
 
@@ -76,7 +78,6 @@ export default function DishDetailPage() {
       }
 
       alert('点菜成功！');
-      setUserName('');
       setUserRating(0);
       setUserComment('');
       fetchDish();
@@ -180,20 +181,19 @@ export default function DishDetailPage() {
 
       {/* Order Form */}
       <div className="bg-white p-4 mb-2">
-        <h3 className="font-semibold mb-4">想吃这道菜？</h3>
+        <h3 className="font-semibold mb-4">
+          {userName ? `想吃这道菜，${userName}？` : '想吃这道菜？'}
+        </h3>
+
+        {userName && (
+          <div className="mb-4 flex items-center gap-2 text-sm text-gray-600">
+            <span>以</span>
+            <span className="font-medium text-orange-600 bg-orange-50 px-2 py-1 rounded">{userName}</span>
+            <span>的名义点菜</span>
+          </div>
+        )}
 
         <div className="space-y-4">
-          <div>
-            <label className="block text-sm text-gray-600 mb-1">你的名字</label>
-            <input
-              type="text"
-              value={userName}
-              onChange={(e) => setUserName(e.target.value)}
-              placeholder="输入你的名字"
-              className="w-full px-4 py-2.5 bg-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-300"
-            />
-          </div>
-
           <div>
             <label className="block text-sm text-gray-600 mb-1">评分（可选）</label>
             <Rating value={userRating} onChange={setUserRating} />
@@ -212,11 +212,17 @@ export default function DishDetailPage() {
 
           <button
             onClick={handleOrder}
-            disabled={submitting || !userName.trim()}
+            disabled={submitting || !userName}
             className="w-full py-3 bg-orange-500 text-white font-semibold rounded-lg hover:bg-orange-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition"
           >
             {submitting ? '提交中...' : '我想吃这个！'}
           </button>
+
+          {!userName && (
+            <p className="text-center text-sm text-gray-500">
+              请先<a href="/" className="text-orange-500 hover:underline">登录</a>后点菜
+            </p>
+          )}
         </div>
       </div>
 

@@ -4,9 +4,12 @@ import { useEffect, useState, useCallback } from 'react';
 import { DishCard } from '@/components/DishCard';
 import { CategoryFilter } from '@/components/CategoryFilter';
 import { SearchBar } from '@/components/SearchBar';
-import { Utensils, Plus, BookOpen, AlertCircle } from 'lucide-react';
+import LoginModal from '@/components/LoginModal';
+import { useUser } from '@/contexts/UserContext';
+import { Utensils, Plus, BookOpen, AlertCircle, LogOut, User } from 'lucide-react';
 
 export default function HomePage() {
+  const { userName, logout } = useUser();
   const [dishes, setDishes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -56,10 +59,27 @@ export default function HomePage() {
       {/* Header */}
       <header className="bg-white shadow-sm sticky top-0 z-10">
         <div className="max-w-4xl mx-auto px-4 py-4">
-          <h1 className="text-2xl font-bold mb-4 flex items-center gap-2">
-            <Utensils className="text-orange-500" />
-            今天吃什么
-          </h1>
+          <div className="flex items-center justify-between mb-4">
+            <h1 className="text-2xl font-bold flex items-center gap-2">
+              <Utensils className="text-orange-500" />
+              今天吃什么
+            </h1>
+            {userName && (
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5 bg-orange-50 px-3 py-1.5 rounded-full">
+                  <User size={16} className="text-orange-500" />
+                  <span className="text-sm font-medium text-orange-700">{userName}</span>
+                </div>
+                <button
+                  onClick={logout}
+                  className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition"
+                  title="退出登录"
+                >
+                  <LogOut size={16} />
+                </button>
+              </div>
+            )}
+          </div>
           <SearchBar value={searchQuery} onChange={setSearchQuery} />
         </div>
       </header>
@@ -137,6 +157,9 @@ export default function HomePage() {
           </a>
         </div>
       </nav>
+
+      {/* Login Modal */}
+      <LoginModal />
     </div>
   );
 }
